@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+import 'package:flutter/services.dart';
+import 'firebase_options.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'dart:async';
 import 'package:contest/infoPage.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +9,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -55,13 +58,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //server marker list
   List<Map<String, double>> gpsData =[];
+  List<Map<String, double>> robotData =[];
+
+
 
   //marker list
   Set<Marker> markers = Set();
-
+  Set<Marker> robotMarker =Set();
   //mapping controller
   GoogleMapController? _controller;
 
+  BitmapDescriptor? robotMarkerIcon;
+
+  //change the marker image
+  void loadRobotMarkerIcon() async {
+    final ByteData bytes = await rootBundle.load('assets/1.png');
+    robotMarkerIcon = BitmapDescriptor.fromBytes(bytes.buffer.asUint8List());
+  }
 
   //showModalBottomSheet, show marker infomation
   void _showMarkerDetails(BuildContext context, MarkerId markerId) async {
@@ -72,26 +85,26 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (BuildContext context) {
         return Container(
           height: 500,
-          child: ListView(
+          margin: EdgeInsets.only(left: 10,right: 10,top: 20,bottom: 50),
+          child: Column(
             children: [
-              //bar
-              Center(
-                child: Container(
-                  height: 10,
-                  margin: EdgeInsets.symmetric(horizontal: 30 ,vertical: 10),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.black12, width: 3),
-                    color:Colors.cyan ,
-                  ),
-
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Drain : ${markerId.value}'),
+                  GestureDetector(
+                      child: Icon(Icons.arrow_back,color: Color(0xff2ECCFA),))
+                ],
               ),
-              Center(child: Text('Marker ID: ${markerId.value}')),
+
+
               GestureDetector(
                 child:Image.network(_url),
+
                 onTap: () {
+                  print("asdf");
                 },
+
               )
 
             ],
@@ -104,35 +117,64 @@ class _MyHomePageState extends State<MyHomePage> {
   //clear marker list
   void clearFunc() {
     markers.clear();
+    robotMarker.clear();
   }
   //read server list and make a local list
   Future readData() async {
     //connect realtime database
-    final marker = await ref.child("numberMarker").get();
+    final numberMarker = await ref.child("numberMarker").get();
     final gps = await ref.child("gps").get();
+    final robotLocation = await ref.child("robot").get();
+    final Robot = await ref.child("numberRobot").get();
 
-    var number = marker.value;
+
+    var number = numberMarker.value;
+    var numberRobot = Robot.value;
     var _gps= gps.value as List<dynamic>?;
+    var robot = robotLocation.value as List<dynamic>?;
 
-    if (_gps != null) {
+    if (_gps != null && robot != null) {
       gpsData.clear();
+      robotData.clear();
       //making a loacl list
     for(var data in _gps){
       double lati = data['lati'] as double;
       double long = data['long'] as double;
       gpsData.add({'lati': lati, 'long': long});
-    }}
+    }
+    for(var data2 in robot){
+      double lati = data2['lati'] as double;
+      double long = data2['long'] as double;
+      robotData.add({'lati': lati, 'long': long});
+      }
+    }
     setState(() {
       clearFunc();
       for (int i = 0; i < int.parse(number.toString()); i++) {
+        //drain marker
         markers.add(
           Marker(
             position: LatLng(gpsData[i]["lati"]!.toDouble(), gpsData[i]["long"]!.toDouble()),
             markerId: MarkerId(i.toString()),
+            icon:  BitmapDescriptor.defaultMarker,
             //onTap marker
             onTap: () {
               _showMarkerDetails(context, MarkerId(i.toString()));
-              print(i);
+            },
+          ),
+        );
+      }
+      for (int i = 0; i < int.parse(numberRobot.toString()); i++) {
+        //drain marker
+        markers.add(
+          Marker(
+            position: LatLng(robotData[i]["lati"]!.toDouble(), robotData[i]["long"]!.toDouble()),
+            markerId: MarkerId(i.toString()),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            // robotMarkerIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            //onTap marker
+            onTap: () {
+              print("Robot");
             },
           ),
         );
@@ -150,11 +192,10 @@ class _MyHomePageState extends State<MyHomePage> {
               _controller?.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng,20));
     });
   }
-
   //initial camera position
   final CameraPosition _initialPosition = CameraPosition(
-      target: LatLng(36.2967660, 126.8352470),
-      zoom: 20,
+      target: LatLng(37.297567, 126.83670783333334),
+      zoom: 5,
 
   );
 
@@ -167,6 +208,8 @@ class _MyHomePageState extends State<MyHomePage> {
     //ref listen
     ref.onValue.listen((event) {
       readData();
+      loadRobotMarkerIcon();
+
     });
   }
 
@@ -177,6 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return MaterialApp(
       home:Scaffold(
         appBar: AppBar(
+          backgroundColor: Color(0xff2ECCFA),
           title: const Text('mapping'),
           leading: IconButton(
               onPressed: (){
@@ -184,7 +228,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   getCurrentLocation();
                 });
               },
-              icon:const Icon(Icons.autorenew)),
+              icon:const Icon(Icons.my_location_outlined)),
         ),
 
 
@@ -201,7 +245,6 @@ class _MyHomePageState extends State<MyHomePage> {
               myLocationButtonEnabled: true,
               myLocationEnabled: true,
               markers: markers,
-
             );
           }
         ),
