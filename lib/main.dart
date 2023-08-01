@@ -85,17 +85,19 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (BuildContext context) {
         return Container(
           height: 500,
-          margin: EdgeInsets.only(left: 10,right: 10,top: 20,bottom: 50),
+          margin: EdgeInsets.only(left: 10,right: 10,top: 10),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Drain : ${markerId.value}'),
-                  GestureDetector(
-                      child: Icon(Icons.arrow_back,color: Color(0xff2ECCFA),))
-                ],
+              Container(
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(50),
+                color: Colors.grey),
+                height: 5,
+                width: 40,
+                margin: EdgeInsets.only(bottom: 20),
+
               ),
+              Text('Drain : ${markerId.value}'),
+
 
 
               GestureDetector(
