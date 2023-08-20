@@ -3,15 +3,15 @@ import 'package:flutter/services.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:async';
-import 'package:contest/infoPage.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:contest/infoPage.dart';
 
+import 'dart:ui' as ui;
 
 
 void main() async {
@@ -55,26 +55,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //firebase reference
   DatabaseReference ref = FirebaseDatabase.instance.ref();
-
   //server marker list
   List<Map<String, double>> gpsData =[];
   List<Map<String, double>> robotData =[];
-
-
-
   //marker list
   Set<Marker> markers = Set();
   Set<Marker> robotMarker =Set();
   //mapping controller
   GoogleMapController? _controller;
-
   BitmapDescriptor? robotMarkerIcon;
-
   //change the marker image
   void loadRobotMarkerIcon() async {
-    final ByteData bytes = await rootBundle.load('assets/1.png');
+    final ByteData bytes = await rootBundle.load('assets/robot.png');
     robotMarkerIcon = BitmapDescriptor.fromBytes(bytes.buffer.asUint8List());
   }
+
 
   //showModalBottomSheet, show marker infomation
   void _showMarkerDetails(BuildContext context, MarkerId markerId) async {
@@ -94,21 +89,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 height: 5,
                 width: 40,
                 margin: EdgeInsets.only(bottom: 20),
-
               ),
               Text('Drain : ${markerId.value}'),
-
-
-
               GestureDetector(
                 child:Image.network(_url),
-
-                onTap: () {
-                  print("asdf");
-                },
-
               )
-
             ],
           ),
         );
@@ -158,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Marker(
             position: LatLng(gpsData[i]["lati"]!.toDouble(), gpsData[i]["long"]!.toDouble()),
             markerId: MarkerId(i.toString()),
-            icon:  BitmapDescriptor.defaultMarker,
+            icon:  BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueCyan),
             //onTap marker
             onTap: () {
               _showMarkerDetails(context, MarkerId(i.toString()));
@@ -172,11 +157,10 @@ class _MyHomePageState extends State<MyHomePage> {
           Marker(
             position: LatLng(robotData[i]["lati"]!.toDouble(), robotData[i]["long"]!.toDouble()),
             markerId: MarkerId(i.toString()),
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-            // robotMarkerIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon: robotMarkerIcon ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
             //onTap marker
             onTap: () {
-              print("Robot");
+              Navigator.push(context, MaterialPageRoute(builder: (context) => infoPage(),));
             },
           ),
         );
@@ -185,33 +169,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
   // get current location func + moving camera
-   getCurrentLocation() async{
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-    LatLng currentLatLng = LatLng(position.latitude,position.longitude);
-    setState(() {
-              _controller?.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng,20));
-    });
-  }
+
   //initial camera position
   final CameraPosition _initialPosition = CameraPosition(
       target: LatLng(37.297567, 126.83670783333334),
-      zoom: 5,
+      zoom: 20,
 
   );
 
   //initState
   @override
   void initState() {
+    readData();
     super.initState();
     requestLocationPermission();
-    getCurrentLocation();
     //ref listen
     ref.onValue.listen((event) {
       readData();
       loadRobotMarkerIcon();
-
     });
   }
 
@@ -222,15 +197,16 @@ class _MyHomePageState extends State<MyHomePage> {
     return MaterialApp(
       home:Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xff2ECCFA),
-          title: const Text('mapping'),
-          leading: IconButton(
+          backgroundColor: Color(0xff9AC5F4),
+          title: const Text('Embedded Contest 2023'),
+          actions: [IconButton(
               onPressed: (){
                 setState(() {
-                  getCurrentLocation();
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => infoPage(),));
+
                 });
               },
-              icon:const Icon(Icons.my_location_outlined)),
+              icon:const Icon(Icons.info_outline)),]
         ),
 
 
