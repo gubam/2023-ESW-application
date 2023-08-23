@@ -10,8 +10,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:contest/infoPage.dart';
-
+import 'package:percent_indicator/percent_indicator.dart';
 import 'dart:ui' as ui;
+import 'ImagePage.dart';
 
 
 void main() async {
@@ -60,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, double>> robotData =[];
   //marker list
   Set<Marker> markers = Set();
-  Set<Marker> robotMarker =Set();
+  Set<Marker> robotMarker = Set();
   //mapping controller
   GoogleMapController? _controller;
   BitmapDescriptor? robotMarkerIcon;
@@ -75,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _showMarkerDetails(BuildContext context, MarkerId markerId) async {
     Reference _ref = FirebaseStorage.instance.ref().child('/image/${markerId.value}');
     String _url = await _ref.getDownloadURL();
+    bool? isChecked = false;
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -90,10 +92,47 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 40,
                 margin: EdgeInsets.only(bottom: 20),
               ),
-              Text('Drain : ${markerId.value}'),
               GestureDetector(
                 child:Image.network(_url),
-              )
+              ),
+              Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+              Container(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        Text("확대 :"),
+                        IconButton(onPressed: (){
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>ImagePage(url:_url)));
+                          },
+                            icon: Icon(Icons.zoom_in)),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text("청소 상태 :"),
+                        Checkbox(
+                            value: isChecked,
+                            onChanged: (value){setState(() {
+                              isChecked = value;
+                              print("object");
+                            });}),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(padding: EdgeInsets.symmetric(vertical: 5)),
+              LinearPercentIndicator(
+                barRadius: Radius.circular(5.0),
+                padding: EdgeInsets.zero,
+                percent: 0.5,
+                lineHeight: 15,
+                backgroundColor: Colors.grey,
+                progressColor: Color(0xff9AC5F4),
+              ),
+
             ],
           ),
         );
@@ -199,7 +238,8 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           backgroundColor: Color(0xff9AC5F4),
           title: const Text('Embedded Contest 2023'),
-          actions: [IconButton(
+          actions: [
+            IconButton(
               onPressed: (){
                 setState(() {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => infoPage(),));
