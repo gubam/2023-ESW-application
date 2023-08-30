@@ -174,6 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
       robotData.add({'lati': lati, 'long': long});
       }
     }
+
     setState(() {
       clearFunc();
       for (int i = 0; i < int.parse(number.toString()); i++) {

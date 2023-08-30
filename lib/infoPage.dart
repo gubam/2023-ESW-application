@@ -12,9 +12,15 @@ DatabaseReference ref = FirebaseDatabase.instance.ref();
 
 var states;
 var butts;
-bool checked = false;
+bool openChecked = false;
+bool brushChecked = false;
+
 Future openBox(checked) async{
   await ref.child("open").set (checked);
+}
+
+Future rollBrush(checked) async{
+  await ref.child("brush").set (checked);
 }
 
 Future robotState(state) async{
@@ -53,13 +59,24 @@ class _infoPageState extends State<infoPage> {
               children: [
                 Text("상자 열기 : ",style: TextStyle(fontSize: 20),),
                 Switch(
-                    value: checked,
+                    value: openChecked,
                     onChanged: (value){
                       setState(() {
-                        checked = value;
-                        openBox(checked);
+                        openChecked = value;
+                        openBox(openChecked);
                       });
                     },
+                ),
+                Text("브러쉬 : ",style: TextStyle(fontSize: 20),),
+                Switch(
+                  value: brushChecked,
+                  onChanged: (value){
+                    setState(() {
+                      brushChecked = value;
+                      rollBrush(brushChecked);
+                      print(value);
+                    });
+                  },
                 ),
               ],
             ),
