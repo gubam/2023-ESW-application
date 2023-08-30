@@ -14,7 +14,6 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'dart:ui' as ui;
 import 'ImagePage.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
