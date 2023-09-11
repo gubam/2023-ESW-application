@@ -1,4 +1,4 @@
-# application
+# Flutter Application for contest
 
 Flutter project for the Embedded-Software-Contest2023.
 
