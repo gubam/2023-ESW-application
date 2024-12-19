@@ -1,4 +1,4 @@
-# Flutter Application
+## Flutter Application for robot control
 
 This is Flutter project for the Embedded-Software-Contest2023.
 
